@@ -34,14 +34,6 @@ Windows: Double-click Project1.exe or run via Visual Studio.
 
 Controls:
 
-W/A/S/D: Move the camera forward/left/back/right
-Spacebar: Ascend
-Shift: Descend
-O(not zero, its the letter O): Cycle through camera-modes.
-P/L: In planet close-up mode, use P or L to cycle up/down through the planets.
-
-Mouse: Look around
-
 Esc: Exit the program
 
 Notes:

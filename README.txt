@@ -19,7 +19,7 @@ Linker → General → Additional Library Directories
 
 Build the project using Ctrl + Shift + B or Build → Build Solution.
 
-The executable will be located in 1221304904_Assignment\Project1\Project1.exe
+The executable will be located in the build folder.
 
 ------------------------------------------------------------------------------------------------------
 

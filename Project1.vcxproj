@@ -74,10 +74,22 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(ProjectDir)include;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)lib;$(LibraryPath)</LibraryPath>
+    <OutDir>$(ProjectDir)build\</OutDir>
+    <IntDir>$(ProjectDir)build\intermediate\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(ProjectDir)include;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)lib;$(LibraryPath)</LibraryPath>
+    <OutDir>$(ProjectDir)build\</OutDir>
+    <IntDir>$(ProjectDir)build\intermediate\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(ProjectDir)build\</OutDir>
+    <IntDir>$(ProjectDir)build\intermediate\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(ProjectDir)build\</OutDir>
+    <IntDir>$(ProjectDir)build\intermediate\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -111,12 +123,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\wisya\Desktop\CGD6214\Libraries\GLFW\include;C:\Users\wisya\Desktop\CGD6214\Libraries\GLEW\include;C:\Users\wisya\Desktop\CGD6214\Libraries\GLM;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\Project1\Project1\include;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\1221304904_Assignment\Project1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\wisya\Desktop\CGD6214\Libraries\GLFW\include;C:\Users\wisya\Desktop\CGD6214\Libraries\GLEW\include;C:\Users\wisya\Desktop\CGD6214\Libraries\GLM;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\Project1\Project1\include;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\1221304904_Assignment\Project1\include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\wisya\Desktop\CGD6214\Libraries\GLFW\lib-vc2022;C:\Users\wisya\Desktop\CGD6214\Libraries\GLEW\lib\Release\x64;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\1221304904_Assignment\Project1\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\wisya\Desktop\CGD6214\Libraries\GLFW\lib-vc2022;C:\Users\wisya\Desktop\CGD6214\Libraries\GLEW\lib\Release\x64;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\1221304904_Assignment\Project1\libs;$(ProjectDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;glew32.lib;opengl32.lib;assimp-vc143-mt.lib
 ;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -129,12 +141,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\wisya\Desktop\CGD6214\Libraries\GLFW\include;C:\Users\wisya\Desktop\CGD6214\Libraries\GLEW\include;C:\Users\wisya\Desktop\CGD6214\Libraries\GLM;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\Project1\Project1\include;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\1221304904_Assignment\Project1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\wisya\Desktop\CGD6214\Libraries\GLFW\include;C:\Users\wisya\Desktop\CGD6214\Libraries\GLEW\include;C:\Users\wisya\Desktop\CGD6214\Libraries\GLM;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\Project1\Project1\include;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\1221304904_Assignment\Project1\include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\wisya\Desktop\CGD6214\Libraries\GLFW\lib-vc2022;C:\Users\wisya\Desktop\CGD6214\Libraries\GLEW\lib\Release\x64;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\1221304904_Assignment\Project1\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\wisya\Desktop\CGD6214\Libraries\GLFW\lib-vc2022;C:\Users\wisya\Desktop\CGD6214\Libraries\GLEW\lib\Release\x64;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\1221304904_Assignment\Project1\libs;$(ProjectDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;glew32.lib;opengl32.lib;assimp-vc143-mt.lib
 ;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>

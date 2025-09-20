@@ -11,7 +11,7 @@ Windows (Visual Studio)
 
 Open Project1.sln in Visual Studio.
 
-Ensure that GLEW, GLM and GLFW include/library directories are correctly set in project properties:
+Ensure that assimp, GLEW, GLM and GLFW include/library directories are correctly set in project properties:
 
 C/C++ → General → Additional Include Directories
 
@@ -25,8 +25,9 @@ The executable will be located in the build folder.
 
 Running Instructions:
 
-Ensure your assets folder (models, textures, shaders) is in the same directory as the executable. (this should already
-be done unless OneDrive messed up something)
+Ensure your assets folder (models, textures, shaders) is in the same directory as the executable. (we'll do this at the end of the assignment)
+
+For now, just run the program through Visual Studio otherwise the assets won't load.
 
 Launch the program:
 

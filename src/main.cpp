@@ -8,9 +8,9 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-
 #include "Model.h"
 #include "Shader.h"
+#include "Camera.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "../include/stb_image.h"
 

@@ -59,7 +59,7 @@ Makefile
 *.bak
 
 # =========================
-# Keep these folders!
+# Keep these folders
 # =========================
 !include/**
 !src/**
@@ -67,7 +67,3 @@ Makefile
 !shaders/**
 !lib/**
 !bin/**
-/Camera.cpp
-/Camera.h
-/.gitignore
-/.gitignore

@@ -18,10 +18,16 @@ public:
     void Draw(unsigned int shaderID);
 
 private:
+    // Directory for locating textures
+    std::string directory;
+
     // Loads a model with Assimp and stores the resulting meshes
     void loadModel(const std::string &path);
 
     // Process Assimp nodes and meshes
     void processNode(aiNode* node, const aiScene* scene);
     Mesh processMesh(aiMesh* mesh, const aiScene* scene);
+
+    // Load textures from material
+    std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
 };

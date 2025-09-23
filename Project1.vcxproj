@@ -123,12 +123,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLFW\include;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLEW\include;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLM;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Project\include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\User\Documents\Work\2025 2\Computer Graphics\Project\libs;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLFW\include;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLEW\include;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLM;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLFW\lib-vc2022;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLEW\lib\Release\x64;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Project\libs;$(ProjectDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\User\Documents\Work\2025 2\Computer Graphics\Project\libs;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLFW\lib-vc2022;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLEW\lib\Release\x64;$(ProjectDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;glew32.lib;opengl32.lib;assimp-vc143-mt.lib
 ;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -141,12 +141,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLFW\include;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLEW\include;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLM;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Project\include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\User\Documents\Work\2025 2\Computer Graphics\Project\libs;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLFW\include;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLEW\include;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLM;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLFW\lib-vc2022;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLEW\lib\Release\x64;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Project\libs;$(ProjectDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\User\Documents\Work\2025 2\Computer Graphics\Project\libs;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLFW\lib-vc2022;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLEW\lib\Release\x64;$(ProjectDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;glew32.lib;opengl32.lib;assimp-vc143-mt.lib
 ;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>

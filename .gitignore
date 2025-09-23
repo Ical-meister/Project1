@@ -67,3 +67,7 @@ Makefile
 !shaders/**
 !lib/**
 !bin/**
+/Camera.cpp
+/Camera.h
+/.gitignore
+/.gitignore

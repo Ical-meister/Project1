@@ -10,6 +10,7 @@
 #include <assimp/postprocess.h>
 
 #include "Model.h"
+#pragma message("Compiling with Model.h from: " __FILE__)
 #include "Shader.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "../include/stb_image.h"
@@ -68,7 +69,8 @@ int main() {
     shader.setMat4("projection", projection);
 
     // 5. Load model with Assimp
-    Model tree("assets/models/CommonTree_1.obj");
+    Model tree("assets/models/CommonTree_1/CommonTree_1.obj");
+
 
 
 
@@ -82,6 +84,15 @@ int main() {
 
         // Use shader
         shader.use();
+
+        // Set light properties (directional light)
+        shader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
+        shader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+        shader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+        shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+        // Pass camera position each frame (inside render loop)
+        shader.setVec3("viewPos", glm::vec3(0.0f, 2.0f, 5.0f));
 
         // TODO: add camera/projection matrix setup here
         // glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);

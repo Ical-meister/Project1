@@ -59,7 +59,7 @@ Makefile
 *.bak
 
 # =========================
-# Keep these folders!
+# Keep these folders
 # =========================
 !include/**
 !src/**

@@ -13,6 +13,7 @@
 #pragma message("Compiling with Model.h from: " __FILE__)
 #include "Shader.h"
 #include "Camera.h"
+#include "Flashlight.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "../include/stb_image.h"
 
@@ -30,6 +31,9 @@ bool firstMouse = true;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+// Flashlight
+Flashlight flashlight;
 
 // Callbacks
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -64,6 +68,16 @@ void processInput(GLFWwindow* window) {
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+        static bool pressed = false;
+        if (!pressed) {
+            flashlight.toggle();
+            pressed = true;
+        }
+        else {
+            pressed = false;
+        }
+    }
 }
 
 int main() {
@@ -138,8 +152,22 @@ int main() {
         shader.setMat4("projection", projection);
         shader.setMat4("view", view);
 
+		// Update flashlight position and direction
+        flashlight.updateFromCamera(camera.Position, camera.Front);
+
         // Use shader
         shader.use();
+        shader.setBool("flashlight.enabled", flashlight.enabled);
+        shader.setVec3("flashlight.position", flashlight.position);
+        shader.setVec3("flashlight.direction", flashlight.direction);
+        shader.setVec3("flashlight.ambient", flashlight.ambient);
+        shader.setVec3("flashlight.diffuse", flashlight.diffuse);
+        shader.setVec3("flashlight.specular", flashlight.specular);
+        shader.setFloat("flashlight.cutOff", flashlight.cutOff);
+        shader.setFloat("flashlight.outerCutOff", flashlight.outerCutOff);
+        shader.setFloat("flashlight.constant", flashlight.constant);
+        shader.setFloat("flashlight.linear", flashlight.linear);
+        shader.setFloat("flashlight.quadratic", flashlight.quadratic);
 
         // Set light properties (directional light)
         shader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);

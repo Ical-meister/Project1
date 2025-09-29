@@ -44,5 +44,14 @@
     <ClInclude Include="include\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Flashlight.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DayNightCycle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

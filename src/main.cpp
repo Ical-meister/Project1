@@ -461,19 +461,28 @@ int main() {
         shader.setVec3("dirLight.diffuse", cycle.diffuse);
         shader.setVec3("dirLight.specular", cycle.specular);
 
-        shader.setVec3("fogColor", glm::vec3(0.6f, 0.8f, 1.0f));
+        shader.setVec3("fogColor", cycle.backgroundColor);
         shader.setFloat("fogDensity", 0.04f);
 
-        // --- Point light (glowing rock) ---
+        /*// --- Point light (glowing rock) ---
         shader.setVec3("pointLights[0].position", glm::vec3(2.0f, 0.5f, 2.0f));  // rock position
         shader.setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
         shader.setVec3("pointLights[0].diffuse", 1.0f, 0.6f, 0.3f);   // warm orange glow
         shader.setVec3("pointLights[0].specular", 1.0f, 0.6f, 0.3f);
         shader.setFloat("pointLights[0].constant", 1.0f);
         shader.setFloat("pointLights[0].linear", 0.09f);
+        shader.setFloat("pointLights[0].quadratic", 0.032f);*/
+
+		// Disable point light #0
+        shader.setVec3("pointLights[0].position", glm::vec3(0.0f));  // rock position
+        shader.setVec3("pointLights[0].ambient", glm::vec3(0.0f));
+        shader.setVec3("pointLights[0].diffuse", glm::vec3(0.0f));   // warm orange glow
+        shader.setVec3("pointLights[0].specular", glm::vec3(0.0f));
+        shader.setFloat("pointLights[0].constant", 1.0f);
+        shader.setFloat("pointLights[0].linear", 0.09f);
         shader.setFloat("pointLights[0].quadratic", 0.032f);
 
-        // Disable point light #2
+        // Disable point light #1
         shader.setVec3("pointLights[1].position", glm::vec3(0.0f));
         shader.setVec3("pointLights[1].ambient", 0.0f, 0.0f, 0.0f);
         shader.setVec3("pointLights[1].diffuse", 0.0f, 0.0f, 0.0f);
@@ -482,7 +491,7 @@ int main() {
         shader.setFloat("pointLights[1].linear", 0.09f);
         shader.setFloat("pointLights[1].quadratic", 0.032f);
 
-		    // Flashlight
+		// Flashlight
         flashlight.updateFromCamera(camera.Position, camera.Front);
 
         shader.use();

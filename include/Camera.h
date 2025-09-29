@@ -2,6 +2,9 @@
 #include <gl/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <iostream>
+#include <vector>
 
 // Defines several possible options for camera movement
 enum Camera_Movement {
@@ -36,7 +39,7 @@ public:
     float MouseSensitivity;
     float Zoom;
 
-    Camera(glm::vec3 position = glm::vec3(0.0f, 2.0f, 5.0f),
+    Camera(glm::vec3 position = glm::vec3(0.0f, 0.25f, 5.0f),
            glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
            float yaw = YAW, float pitch = PITCH);
 

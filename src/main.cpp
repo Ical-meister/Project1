@@ -8,24 +8,26 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "Camera.h"
-
 
 #include "Model.h"
 #pragma message("Compiling with Model.h from: " __FILE__)
+
 #include "Shader.h"
+#include "Camera.h"
+#include "Flashlight.h"
+#include "DayNightCycle.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "../include/stb_image.h"
 #include <vector>
 using std::vector;
-
 
 // Window settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // Camera
-Camera camera(glm::vec3(0.0f, 2.0f, 5.0f));
+Camera camera(glm::vec3(0.0f, 0.25f, 5.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -34,13 +36,20 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+// Flashlight
+Flashlight flashlight;
+static bool pressed = false;
+
+// Day-Night Cycle
+DayNightCycle cycle(60.0f);
+
 struct ObjectInstance {
     glm::vec3 position;
     glm::vec3 scale;
     float rotationDeg;
 };
 
-// Input handling (basic escape key to close)
+// Input handling
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -53,8 +62,18 @@ void processInput(GLFWwindow* window) {
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
-}
 
+    static bool pressed = false;
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+        if (!pressed) {
+            flashlight.toggle();
+            pressed = true;
+        }
+    }
+    else {
+        pressed = false;
+    }
+}
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     if (firstMouse) {
@@ -134,7 +153,6 @@ float skyboxVertices[] = {
      1.0f, -1.0f,  1.0f
 };
 
-
 std::vector<ObjectInstance> generateInstances(
     int count,
     float minX, float maxX,
@@ -163,8 +181,6 @@ std::vector<ObjectInstance> generateInstances(
     return instances;
 }
 
-
-
 // Format: Number of objects, min/max X,Z define world bounds, scale range, seed
 std::vector<ObjectInstance> tree1Instances = generateInstances(
     60, -30.0f, 30.0f, -30.0f, 30.0f, 0.08f, 0.95f, 12345  );
@@ -190,7 +206,6 @@ std::vector<ObjectInstance> grassShortInstances = generateInstances(
 std::vector<ObjectInstance> farmHouseInstances = {
     { glm::vec3(5.0f, 0.0f, -10.0f), glm::vec3(0.1f), 15.0f }
 };
-
 
 unsigned int loadCubemap(const std::vector<std::string>& faces) {
     unsigned int textureID;
@@ -222,7 +237,6 @@ unsigned int loadCubemap(const std::vector<std::string>& faces) {
 
     return textureID;
 }
-
 
 void drawInstance(Shader& shader, Model& model, const ObjectInstance& inst) {
     glm::mat4 m = glm::mat4(1.0f);
@@ -284,7 +298,6 @@ void generateForestWall(float halfSize, int countPerSide) {
     }
 }
 
-
 int main() {
     // 1. Initialize GLFW
     if (!glfwInit()) {
@@ -304,12 +317,10 @@ int main() {
         return -1;
     }
 
-
     glfwMakeContextCurrent(window);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
-
 
     // 3. Initialize GLEW
     glewExperimental = GL_TRUE; // needed for core profile
@@ -321,10 +332,18 @@ int main() {
     // Set viewport
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
+  	// Set callbacks
+    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+
+    // Capture mouse
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
     // Enable depth test (important for 3D rendering)
     glEnable(GL_DEPTH_TEST);
 
     // 4. Load shaders
+    Shader flashlightshader("shaders/basic.vs", "shaders/flashlight.fs");
     Shader shader("shaders/model_loading.vs", "shaders/model_loading.fs");
     shader.use();
     shader.setInt("texture_diffuse1", 0);
@@ -381,9 +400,7 @@ int main() {
     Model Pine4("assets/models/Pine_4/Pine_4.obj");
     Model farmHouse("assets/models/farmhouse/farmhouse_obj.obj");
 
-
     generateForestWall(30.0f, 40); // 30 is halfSize since plane is -30 to +30
-
 
     // Skybox setup
     vector<std::string> faces = {
@@ -397,8 +414,6 @@ int main() {
 
     unsigned int cubemapTexture = loadCubemap(faces);
     Shader skyboxShader("shaders/skybox.vs", "shaders/skybox.fs");
-
-
 
     unsigned int grassTexture;
     glGenTextures(1, &grassTexture);
@@ -417,25 +432,21 @@ int main() {
         stbi_image_free(data);
     }
 
-
-    /*
-    shader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-    shader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
-    shader.setFloat("spotLight.constant", 1.0f);
-    shader.setFloat("spotLight.linear", 0.09f);
-    shader.setFloat("spotLight.quadratic", 0.032f);
-    shader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
-    shader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
-    shader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);*/
-
-
     // 6. Main render loop
     while (!glfwWindowShouldClose(window)) {
-        processInput(window);
-
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        cycle.update();
+
+        // update sky background (if not using cubemap)
+        glClearColor(cycle.backgroundColor.r,
+            cycle.backgroundColor.g,
+            cycle.backgroundColor.b,
+            1.0f);
+
+        processInput(window);
 
         glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -443,12 +454,12 @@ int main() {
         shader.use();
         shader.setFloat("material.shininess", 32.0f);
 
-
-        // --- Directional light ---
-        shader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
-        shader.setVec3("dirLight.ambient", 0.2f, 0.2f, 0.2f);
-        shader.setVec3("dirLight.diffuse", 0.9f, 0.9f, 0.8f);
-        shader.setVec3("dirLight.specular", 1.0f, 1.0f, 0.9f);
+        // set directional light from cycle
+        shader.use();
+        shader.setVec3("dirLight.direction", cycle.direction);
+        shader.setVec3("dirLight.ambient", cycle.ambient);
+        shader.setVec3("dirLight.diffuse", cycle.diffuse);
+        shader.setVec3("dirLight.specular", cycle.specular);
 
         shader.setVec3("fogColor", glm::vec3(0.6f, 0.8f, 1.0f));
         shader.setFloat("fogDensity", 0.04f);
@@ -471,10 +482,21 @@ int main() {
         shader.setFloat("pointLights[1].linear", 0.09f);
         shader.setFloat("pointLights[1].quadratic", 0.032f);
 
+		    // Flashlight
+        flashlight.updateFromCamera(camera.Position, camera.Front);
 
-        /*// --- Spotlight follows camera ---
-        shader.setVec3("spotLight.position", camera.Position);
-        shader.setVec3("spotLight.direction", camera.Front); */
+        shader.use();
+        shader.setBool("flashlight.enabled", flashlight.enabled);
+        shader.setVec3("flashlight.position", flashlight.position);
+        shader.setVec3("flashlight.direction", flashlight.direction);
+        shader.setVec3("flashlight.ambient", flashlight.ambient);
+        shader.setVec3("flashlight.diffuse", flashlight.diffuse);
+        shader.setVec3("flashlight.specular", flashlight.specular);
+        shader.setFloat("flashlight.cutOff", flashlight.cutOff);
+        shader.setFloat("flashlight.outerCutOff", flashlight.outerCutOff);
+        shader.setFloat("flashlight.constant", flashlight.constant);
+        shader.setFloat("flashlight.linear", flashlight.linear);
+        shader.setFloat("flashlight.quadratic", flashlight.quadratic);
 
         // Camera matrices
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
@@ -531,7 +553,6 @@ int main() {
             drawInstance(shader, Pine4, inst);
         }
 
-
         // Draw skybox (last)
         glDepthFunc(GL_LEQUAL);
         skyboxShader.use();
@@ -541,6 +562,8 @@ int main() {
 
         skyboxShader.setMat4("view", view);
         skyboxShader.setMat4("projection", projection);
+        skyboxShader.setVec3("skyTint", cycle.diffuse);
+        skyboxShader.setFloat("tintStrength", 1.0f);
 
         // skybox cube
         glBindVertexArray(skyboxVAO);
@@ -549,11 +572,9 @@ int main() {
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // reset to default
 
-
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
 
     // Cleanup
     glfwTerminate();

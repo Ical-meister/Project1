@@ -123,12 +123,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\wisya\Desktop\CGD6214\Libraries\GLFW\include;C:\Users\wisya\Desktop\CGD6214\Libraries\GLEW\include;C:\Users\wisya\Desktop\CGD6214\Libraries\GLM;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\Project1\Project1\include;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\1221304904_Assignment\Project1\include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\User\Documents\Work\2025 2\Computer Graphics\Project\libs;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLFW\include;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLEW\include;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLM;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\wisya\Desktop\CGD6214\Libraries\GLFW\lib-vc2022;C:\Users\wisya\Desktop\CGD6214\Libraries\GLEW\lib\Release\x64;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\1221304904_Assignment\Project1\libs;$(ProjectDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\User\Documents\Work\2025 2\Computer Graphics\Project\libs;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLFW\lib-vc2022;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLEW\lib\Release\x64;$(ProjectDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;glew32.lib;opengl32.lib;assimp-vc143-mt.lib
 ;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -141,12 +141,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\wisya\Desktop\CGD6214\Libraries\GLFW\include;C:\Users\wisya\Desktop\CGD6214\Libraries\GLEW\include;C:\Users\wisya\Desktop\CGD6214\Libraries\GLM;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\Project1\Project1\include;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\1221304904_Assignment\Project1\include;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\User\Documents\Work\2025 2\Computer Graphics\Project\libs;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLFW\include;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLEW\include;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLM;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\wisya\Desktop\CGD6214\Libraries\GLFW\lib-vc2022;C:\Users\wisya\Desktop\CGD6214\Libraries\GLEW\lib\Release\x64;C:\Users\wisya\Desktop\CGD6214\HelloTriangle\1221304904_Assignment\Project1\libs;$(ProjectDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\User\Documents\Work\2025 2\Computer Graphics\Project\libs;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLFW\lib-vc2022;C:\Users\User\Documents\Work\2025 2\Computer Graphics\Libraries\GLEW\lib\Release\x64;$(ProjectDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;glew32.lib;opengl32.lib;assimp-vc143-mt.lib
 ;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -160,8 +160,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Camera.h" />
+    <ClInclude Include="include\DayNightCycle.h" />
+    <ClInclude Include="include\Flashlight.h" />
     <ClInclude Include="include\Mesh.h" />
     <ClInclude Include="include\Model.h" />
+    <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\stb_image.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

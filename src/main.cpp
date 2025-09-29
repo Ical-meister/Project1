@@ -79,9 +79,9 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 float groundVertices[] = {
     // positions           // normals         // texcoords
    -30.0f, 0.0f, -30.0f,   0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
-    30.0f, 0.0f, -30.0f,   0.0f, 1.0f, 0.0f, 30.0f, 0.0f,
-    30.0f, 0.0f,  30.0f,   0.0f, 1.0f, 0.0f, 30.0f, 30.0f,
-   -30.0f, 0.0f,  30.0f,   0.0f, 1.0f, 0.0f,  0.0f, 30.0f
+    30.0f, 0.0f, -30.0f,   0.0f, 1.0f, 0.0f, 50.0f, 0.0f,
+    30.0f, 0.0f,  30.0f,   0.0f, 1.0f, 0.0f, 50.0f, 50.0f,
+   -30.0f, 0.0f,  30.0f,   0.0f, 1.0f, 0.0f,  0.0f, 50.0f
 };
 
 unsigned int groundIndices[] = {
@@ -180,11 +180,11 @@ std::vector<ObjectInstance> fernInstances = generateInstances(
 );
 
 std::vector<ObjectInstance> flower3_groupInstances = generateInstances(
-    550, -30.0f, 30.0f, -30.0f, 30.0f, 0.03f, 0.05f, 444
+    150, -30.0f, 30.0f, -30.0f, 30.0f, 0.03f, 0.05f, 444
 );
 
 std::vector<ObjectInstance> grassShortInstances = generateInstances(
-    800, -30.0f, 30.0f, -30.0f, 30.0f, 0.03f, 0.05f, 9090
+    80, -30.0f, 30.0f, -30.0f, 30.0f, 0.03f, 0.05f, 9090
 );
 
 std::vector<ObjectInstance> farmHouseInstances = {
@@ -285,6 +285,47 @@ void generateForestWall(float halfSize, int countPerSide) {
 }
 
 
+void renderScene(Shader& shader, Model& tree, Model& tree2, Model& rock,
+    Model& fern, Model& grassShort, Model& Flower_3_Group,
+    Model& Pine4, Model& farmHouse,
+    unsigned int groundVAO, unsigned int grassTexture)
+{
+    // Ground
+    glm::mat4 model = glm::mat4(1.0f);
+    shader.setMat4("model", model);
+    // bind grass texture to unit 0 (the same one texture_diffuse1 expects)
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, grassTexture);
+
+    glBindVertexArray(groundVAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    // tree1
+    for (const auto& inst : tree1Instances) drawInstance(shader, tree, inst);
+
+    // tree2
+    for (const auto& inst : tree2Instances) drawInstance(shader, tree2, inst);
+
+    // rocks
+    for (const auto& inst : rockInstances) drawInstance(shader, rock, inst);
+
+    // bushes
+    for (const auto& inst : fernInstances) drawInstance(shader, fern, inst);
+
+    // flowers
+    for (const auto& inst : flower3_groupInstances) drawInstance(shader, Flower_3_Group, inst);
+
+    // grass
+    for (const auto& inst : grassShortInstances) drawInstance(shader, grassShort, inst);
+
+    // farmhouse
+    for (auto& inst : farmHouseInstances) drawInstance(shader, farmHouse, inst);
+
+    // forest wall
+    for (const auto& inst : forestWallInstances) drawInstance(shader, Pine4, inst);
+}
+
+
 int main() {
     // 1. Initialize GLFW
     if (!glfwInit()) {
@@ -324,12 +365,49 @@ int main() {
     // Enable depth test (important for 3D rendering)
     glEnable(GL_DEPTH_TEST);
 
+    unsigned int depthMapFBO;
+    glGenFramebuffers(1, &depthMapFBO);
+
+    // create depth texture
+    unsigned int depthMap;
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+        1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+    // attach to FBO
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // Light space transformation matrix (for shadows)
+    glm::mat4 lightProjection, lightView;
+    glm::mat4 lightSpaceMatrix;
+    float near_plane = 1.0f, far_plane = 20.0f;
+    lightProjection = glm::ortho(-40.0f, 40.0f, -40.0f, 40.0f, near_plane, far_plane);
+    lightView = glm::lookAt(glm::vec3(-2.0f, 4.0f, -1.0f), // light position
+        glm::vec3(0.0f, 0.0f, 0.0f),   // look at center
+        glm::vec3(0.0f, 1.0f, 0.0f));  // up vector
+    lightSpaceMatrix = lightProjection * lightView;
+
+
     // 4. Load shaders
     Shader shader("shaders/model_loading.vs", "shaders/model_loading.fs");
     shader.use();
     shader.setInt("texture_diffuse1", 0);
     shader.setInt("texture_specular1", 1);
     shader.setFloat("shininess", 32.0f);
+
+    // Depth shader (renders scene from light's POV)
+    Shader depthShader("shaders/depth_shader.vs", "shaders/depth_shader.fs");
 
     unsigned int groundVAO, groundVBO, groundEBO;
     glGenVertexArrays(1, &groundVAO);
@@ -404,7 +482,14 @@ int main() {
     glGenTextures(1, &grassTexture);
     glBindTexture(GL_TEXTURE_2D, grassTexture);
 
- 
+    // set wrapping and filtering BEFORE/AFTER glTexImage2D (both work, but safer before mipmaps)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    
+
     int width, height, nrChannels;
     unsigned char* data = stbi_load("assets/textures/CartoonGrass.jpg", &width, &height, &nrChannels, STBI_rgb_alpha);
 
@@ -485,51 +570,38 @@ int main() {
         shader.setMat4("view", view);
         shader.setVec3("viewPos", camera.Position);
 
-        // Draw ground
-        glm::mat4 model = glm::mat4(1.0f);
-        shader.setMat4("model", model);
-        glBindTexture(GL_TEXTURE_2D, grassTexture);
-        glBindVertexArray(groundVAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        // send light-space matrix to shader
+        shader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
-        // tree1
-        for (const auto& inst : tree1Instances) {
-            drawInstance(shader, tree, inst);
-        }
+        // bind shadow map texture to unit 2
+        shader.setInt("shadowMap", 2);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
 
-        // tree2
-        for (const auto& inst : tree2Instances) {
-            drawInstance(shader, tree2, inst);
-        }
+        // 1. Render depth map from light’s POV
+        glViewport(0, 0, 1024, 1024);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
 
-        // draw many rocks:
-        for (const auto& inst : rockInstances) {
-            drawInstance(shader, rock, inst);
-        }
+        depthShader.use();
+        depthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
-        // Bushes
-        for (const auto& inst : fernInstances) {
-            drawInstance(shader, fern, inst);
-        }
+        renderScene(depthShader, tree, tree2, rock, fern, grassShort, Flower_3_Group, Pine4, farmHouse, groundVAO, grassTexture);
 
-        //Flower3_Group
-        for (const auto& inst : flower3_groupInstances) {
-            drawInstance(shader, Flower_3_Group, inst);
-        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        //Grass_Short
-        for (const auto& inst : grassShortInstances) {
-            drawInstance(shader, grassShort, inst);
-        }
+        // 2. Reset viewport and render scene normally
+        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        for (auto& inst : farmHouseInstances) {
-            drawInstance(shader, farmHouse, inst);
-        }
+        shader.use();
+        shader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+        shader.setInt("shadowMap", 2);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
 
-        //Forest Border
-        for (const auto& inst : forestWallInstances) {
-            drawInstance(shader, Pine4, inst);
-        }
+        renderScene(shader, tree, tree2, rock, fern, grassShort, Flower_3_Group, Pine4, farmHouse, groundVAO, grassTexture);
+
 
 
         // Draw skybox (last)

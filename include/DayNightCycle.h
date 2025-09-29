@@ -17,45 +17,29 @@ struct DayNightCycle {
     DayNightCycle(float length = 60.0f) : dayLength(length), currentTime(0.0f) {}
 
     void update() {
+        // progress through the day (0 → 1)
         currentTime = fmod(glfwGetTime(), dayLength) / dayLength;
+
+        // angle from 0 to 2π
         float angle = currentTime * glm::two_pi<float>();
 
-        // sun moves east->overhead->west->under ground
+        // sun rotates east (x) → up (y) → west (x) → down (y)
         direction = glm::normalize(glm::vec3(cos(angle), sin(angle), 0.0f));
 
-        // daylight factor (sun height)
-        float daylight = glm::clamp((direction.y + 0.4f) / 0.8f, 0.0f, 1.0f);
-        daylight = daylight * daylight * (3.0f - 2.0f * daylight); // smoothstep easing
+        // raw daylight factor based on sun height
+        float raw = direction.y;
 
-        // colors
-        glm::vec3 dayColor = glm::vec3(1.0f, 1.0f, 0.9f);   // bright neutral
-        glm::vec3 twilightColor = glm::vec3(1.0f, 0.5f, 0.3f);   // warm orange
-        glm::vec3 nightColor = glm::vec3(0.1f, 0.1f, 0.3f);   // deep blue
-        glm::vec3 dayToTwilight = glm::mix(dayColor, twilightColor, 1.0f - daylight);
-        glm::vec3 twilightToNight = glm::mix(twilightColor, nightColor, 1.0f - daylight);
+        // twilight-aware factor
+        daylight = glm::clamp((raw + 0.4f) / 0.8f, 0.0f, 1.0f);
 
-        // final diffuse/ambient color = weighted
-        if (direction.y > 0.0f) {
-            diffuse = dayToTwilight;   // transitioning day → twilight
-        }
-        else {
-            diffuse = twilightToNight; // transitioning twilight → night
-        }
+        // use daylight for light colors
+        glm::vec3 dayColor = glm::vec3(1.0f, 1.0f, 0.9f);
+        glm::vec3 twilight = glm::vec3(1.0f, 0.5f, 0.3f);
+        glm::vec3 nightColor = glm::vec3(0.05f, 0.05f, 0.2f);
 
-        //if (direction.y > 0.2f) {
-        //    diffuse = dayColor;
-        //}
-        //else if (direction.y > -0.2f) {
-        //    // mix twilight with night/day depending on side
-        //    float t = (direction.y + 0.2f) / 0.4f;
-        //    diffuse = glm::mix(nightColor, twilightColor, t);
-        //}
-        //else {
-        //    diffuse = nightColor;
-        //}
-
+        diffuse = glm::mix(nightColor, dayColor, daylight);
         ambient = diffuse * 0.2f;
         specular = diffuse;
-        backgroundColor = glm::mix(nightColor, diffuse, daylight);
+        backgroundColor = glm::mix(nightColor, dayColor, daylight);
     }
 };

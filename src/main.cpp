@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
+#include <random>
 #include <iostream>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -33,6 +33,12 @@ bool firstMouse = true;
 // Timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+struct ObjectInstance {
+    glm::vec3 position;
+    glm::vec3 scale;
+    float rotationDeg;
+};
 
 // Input handling (basic escape key to close)
 void processInput(GLFWwindow* window) {
@@ -72,10 +78,10 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 // Ground vertices (X, Y, Z,  NormalX, NormalY, NormalZ,  U, V)
 float groundVertices[] = {
     // positions           // normals         // texcoords
-   -10.0f, 0.0f, -10.0f,   0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
-    10.0f, 0.0f, -10.0f,   0.0f, 1.0f, 0.0f,  10.0f, 0.0f,
-    10.0f, 0.0f,  10.0f,   0.0f, 1.0f, 0.0f,  10.0f, 10.0f,
-   -10.0f, 0.0f,  10.0f,   0.0f, 1.0f, 0.0f,  0.0f, 10.0f
+   -30.0f, 0.0f, -30.0f,   0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
+    30.0f, 0.0f, -30.0f,   0.0f, 1.0f, 0.0f, 30.0f, 0.0f,
+    30.0f, 0.0f,  30.0f,   0.0f, 1.0f, 0.0f, 30.0f, 30.0f,
+   -30.0f, 0.0f,  30.0f,   0.0f, 1.0f, 0.0f,  0.0f, 30.0f
 };
 
 unsigned int groundIndices[] = {
@@ -129,6 +135,62 @@ float skyboxVertices[] = {
 };
 
 
+std::vector<ObjectInstance> generateInstances(
+    int count,
+    float minX, float maxX,
+    float minZ, float maxZ,
+    float minScale, float maxScale,
+    unsigned int seed = 42   // default seed
+) {
+    std::vector<ObjectInstance> instances;
+
+    std::mt19937 gen(seed);  // deterministic random numbers
+
+    std::uniform_real_distribution<float> distX(minX, maxX);
+    std::uniform_real_distribution<float> distZ(minZ, maxZ);
+    std::uniform_real_distribution<float> distScale(minScale, maxScale);
+    std::uniform_real_distribution<float> distRot(0.0f, 360.0f);
+
+    for (int i = 0; i < count; i++) {
+        ObjectInstance inst;
+        inst.position = glm::vec3(distX(gen), 0.0f, distZ(gen));
+        inst.scale = glm::vec3(distScale(gen));
+        inst.rotationDeg = distRot(gen);
+
+        instances.push_back(inst);
+    }
+
+    return instances;
+}
+
+
+
+// Format: Number of objects, min/max X,Z define world bounds, scale range, seed
+std::vector<ObjectInstance> tree1Instances = generateInstances(
+    60, -30.0f, 30.0f, -30.0f, 30.0f, 0.08f, 0.95f, 12345  );
+
+std::vector<ObjectInstance> tree2Instances = generateInstances(
+    30, -30.0f, 30.0f, -30.0f, 30.0f, 0.08f, 0.95f, 123456);
+
+std::vector<ObjectInstance> rockInstances = generateInstances(
+    30, -30.0f, 30.0f, -30.0f, 30.0f, 0.15f, 0.35f, 67890  );
+
+std::vector<ObjectInstance> fernInstances = generateInstances(
+    450, -30.0f, 30.0f, -30.0f, 30.0f, 0.05f, 0.1f, 333
+);
+
+std::vector<ObjectInstance> flower3_groupInstances = generateInstances(
+    550, -30.0f, 30.0f, -30.0f, 30.0f, 0.03f, 0.05f, 444
+);
+
+std::vector<ObjectInstance> grassShortInstances = generateInstances(
+    800, -30.0f, 30.0f, -30.0f, 30.0f, 0.03f, 0.05f, 9090
+);
+
+std::vector<ObjectInstance> farmHouseInstances = {
+    { glm::vec3(5.0f, 0.0f, -10.0f), glm::vec3(0.1f), 15.0f }
+};
+
 
 unsigned int loadCubemap(const std::vector<std::string>& faces) {
     unsigned int textureID;
@@ -162,7 +224,65 @@ unsigned int loadCubemap(const std::vector<std::string>& faces) {
 }
 
 
+void drawInstance(Shader& shader, Model& model, const ObjectInstance& inst) {
+    glm::mat4 m = glm::mat4(1.0f);
+    m = glm::translate(m, inst.position);
+    m = glm::rotate(m, glm::radians(inst.rotationDeg), glm::vec3(0.0f, 1.0f, 0.0f));
+    m = glm::scale(m, inst.scale);
+    shader.setMat4("model", m);
 
+    
+    model.Draw(shader.ID);   
+    
+}
+
+std::vector<ObjectInstance> forestWallInstances;
+
+void generateForestWall(float halfSize, int countPerSide) {
+    std::mt19937 rng(42); // fixed seed for consistency (change/remove for different runs)
+    std::uniform_real_distribution<float> scaleDist(0.18f, 0.25f);
+    std::uniform_real_distribution<float> rotDist(0.0f, 360.0f);
+
+    float spacing = (2.0f * halfSize) / (countPerSide - 1);
+
+    // Z-edges
+    for (int i = 0; i < countPerSide; i++) {
+        float x = -halfSize + i * spacing;
+
+        // near edge (-Z)
+        forestWallInstances.push_back({
+            glm::vec3(x, 0.0f, -halfSize),
+            glm::vec3(scaleDist(rng)),
+            rotDist(rng)
+            });
+
+        // far edge (+Z)
+        forestWallInstances.push_back({
+            glm::vec3(x, 0.0f, halfSize),
+            glm::vec3(scaleDist(rng)),
+            rotDist(rng)
+            });
+    }
+
+    // X-edges
+    for (int i = 0; i < countPerSide; i++) {
+        float z = -halfSize + i * spacing;
+
+        // left edge (-X)
+        forestWallInstances.push_back({
+            glm::vec3(-halfSize, 0.0f, z),
+            glm::vec3(scaleDist(rng)),
+            rotDist(rng)
+            });
+
+        // right edge (+X)
+        forestWallInstances.push_back({
+            glm::vec3(halfSize, 0.0f, z),
+            glm::vec3(scaleDist(rng)),
+            rotDist(rng)
+            });
+    }
+}
 
 
 int main() {
@@ -207,6 +327,9 @@ int main() {
     // 4. Load shaders
     Shader shader("shaders/model_loading.vs", "shaders/model_loading.fs");
     shader.use();
+    shader.setInt("texture_diffuse1", 0);
+    shader.setInt("texture_specular1", 1);
+    shader.setFloat("shininess", 32.0f);
 
     unsigned int groundVAO, groundVBO, groundEBO;
     glGenVertexArrays(1, &groundVAO);
@@ -250,7 +373,17 @@ int main() {
 
     // 5. Load model with Assimp
     Model tree("assets/models/CommonTree_1/CommonTree_1.obj");
+    Model tree2("assets/models/CommonTree_2/CommonTree_2.obj");
     Model rock("assets/models/Rock_Medium_1/Rock_Medium_1.obj");
+    Model fern("assets/models/Fern_1/Fern_1.obj");
+    Model grassShort("assets/models/Grass_Common_Short/Grass_Common_Short.obj");
+    Model Flower_3_Group("assets/models/Flower_3_Group/Flower_3_Group.obj");
+    Model Pine4("assets/models/Pine_4/Pine_4.obj");
+    Model farmHouse("assets/models/farmhouse/farmhouse_obj.obj");
+
+
+    generateForestWall(30.0f, 40); // 30 is halfSize since plane is -30 to +30
+
 
     // Skybox setup
     vector<std::string> faces = {
@@ -271,24 +404,19 @@ int main() {
     glGenTextures(1, &grassTexture);
     glBindTexture(GL_TEXTURE_2D, grassTexture);
 
-    // set wrapping/filtering
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // load image
+ 
     int width, height, nrChannels;
-    unsigned char* data = stbi_load("assets/textures/PathRocks_Diffuse.png", &width, &height, &nrChannels, 0);
-    if (data) {
-        GLenum format = (nrChannels == 3) ? GL_RGB : GL_RGBA;
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+    unsigned char* data = stbi_load("assets/textures/CartoonGrass.jpg", &width, &height, &nrChannels, STBI_rgb_alpha);
+
+    if (!data) {
+        std::cout << "Failed to load grass texture: " << stbi_failure_reason() << std::endl;
     }
     else {
-        std::cout << "Failed to load grass texture!" << std::endl;
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        stbi_image_free(data);
     }
-    stbi_image_free(data);
+
 
     /*
     shader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
@@ -318,9 +446,12 @@ int main() {
 
         // --- Directional light ---
         shader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
-        shader.setVec3("dirLight.ambient", 0.4f, 0.4f, 0.4f);
+        shader.setVec3("dirLight.ambient", 0.2f, 0.2f, 0.2f);
         shader.setVec3("dirLight.diffuse", 0.9f, 0.9f, 0.8f);
         shader.setVec3("dirLight.specular", 1.0f, 1.0f, 0.9f);
+
+        shader.setVec3("fogColor", glm::vec3(0.6f, 0.8f, 1.0f));
+        shader.setFloat("fogDensity", 0.04f);
 
         // --- Point light (glowing rock) ---
         shader.setVec3("pointLights[0].position", glm::vec3(2.0f, 0.5f, 2.0f));  // rock position
@@ -361,18 +492,45 @@ int main() {
         glBindVertexArray(groundVAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        // Draw tree
-        model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(0.1f));
-        shader.setMat4("model", model);
-        tree.Draw(shader.ID);
+        // tree1
+        for (const auto& inst : tree1Instances) {
+            drawInstance(shader, tree, inst);
+        }
 
-        // Draw rock
-        glm::mat4 rockModel = glm::mat4(1.0f);
-        rockModel = glm::translate(rockModel, glm::vec3(2.0f, 0.0f, 2.0f));
-        rockModel = glm::scale(rockModel, glm::vec3(0.3f));  // adjust size
-        shader.setMat4("model", rockModel);
-        rock.Draw(shader.ID);
+        // tree2
+        for (const auto& inst : tree2Instances) {
+            drawInstance(shader, tree2, inst);
+        }
+
+        // draw many rocks:
+        for (const auto& inst : rockInstances) {
+            drawInstance(shader, rock, inst);
+        }
+
+        // Bushes
+        for (const auto& inst : fernInstances) {
+            drawInstance(shader, fern, inst);
+        }
+
+        //Flower3_Group
+        for (const auto& inst : flower3_groupInstances) {
+            drawInstance(shader, Flower_3_Group, inst);
+        }
+
+        //Grass_Short
+        for (const auto& inst : grassShortInstances) {
+            drawInstance(shader, grassShort, inst);
+        }
+
+        for (auto& inst : farmHouseInstances) {
+            drawInstance(shader, farmHouse, inst);
+        }
+
+        //Forest Border
+        for (const auto& inst : forestWallInstances) {
+            drawInstance(shader, Pine4, inst);
+        }
+
 
         // Draw skybox (last)
         glDepthFunc(GL_LEQUAL);

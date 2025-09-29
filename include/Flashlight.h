@@ -6,9 +6,9 @@ struct Flashlight {
     glm::vec3 position = glm::vec3(0.0f);
     glm::vec3 direction = glm::vec3(0.0f, 0.0f, -1.0f);
 
-    glm::vec3 ambient = glm::vec3(0.1f);
-    glm::vec3 diffuse = glm::vec3(1.0f);
-    glm::vec3 specular = glm::vec3(1.0f);
+    glm::vec3 ambient = glm::vec3(0.2f, 0.15f, 0.05f);   // soft warm glow
+    glm::vec3 diffuse = glm::vec3(1.0f, 0.85f, 0.4f);    // orange-yellow
+    glm::vec3 specular = glm::vec3(1.0f, 0.9f, 0.6f);     // warmer highlights
 
     float cutOff = glm::cos(glm::radians(12.5f));
     float outerCutOff = glm::cos(glm::radians(17.5f));

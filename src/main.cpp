@@ -11,9 +11,11 @@
 
 #include "Model.h"
 #pragma message("Compiling with Model.h from: " __FILE__)
+
 #include "Shader.h"
 #include "Camera.h"
 #include "Flashlight.h"
+#include "DayNightCycle.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "../include/stb_image.h"
@@ -37,6 +39,9 @@ float lastFrame = 0.0f;
 // Flashlight
 Flashlight flashlight;
 static bool pressed = false;
+
+// Day-Night Cycle
+DayNightCycle cycle(60.0f);
 
 // Input handling
 void processInput(GLFWwindow* window) {
@@ -308,6 +313,14 @@ int main() {
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
+        cycle.update();
+
+        // update sky background (if not using cubemap)
+        glClearColor(cycle.backgroundColor.r,
+            cycle.backgroundColor.g,
+            cycle.backgroundColor.b,
+            1.0f);
+
         processInput(window);
 
         glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
@@ -316,11 +329,12 @@ int main() {
         shader.use();
         shader.setFloat("material.shininess", 32.0f);
 
-        // --- Directional light ---
-        shader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
-        shader.setVec3("dirLight.ambient", 0.4f, 0.4f, 0.4f);
-        shader.setVec3("dirLight.diffuse", 0.9f, 0.9f, 0.8f);
-        shader.setVec3("dirLight.specular", 1.0f, 1.0f, 0.9f);
+        // set directional light from cycle
+        shader.use();
+        shader.setVec3("dirLight.direction", cycle.direction);
+        shader.setVec3("dirLight.ambient", cycle.ambient);
+        shader.setVec3("dirLight.diffuse", cycle.diffuse);
+        shader.setVec3("dirLight.specular", cycle.specular);
 
         // --- Point light (glowing rock) ---
         shader.setVec3("pointLights[0].position", glm::vec3(2.0f, 0.5f, 2.0f));  // rock position
@@ -394,6 +408,8 @@ int main() {
 
         skyboxShader.setMat4("view", view);
         skyboxShader.setMat4("projection", projection);
+        skyboxShader.setVec3("skyTint", cycle.diffuse);
+        skyboxShader.setFloat("tintStrength", 1.0f);
 
         // skybox cube
         glBindVertexArray(skyboxVAO);

@@ -67,6 +67,8 @@ uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform Flashlight flashlight;
 uniform vec3 viewPos;
 uniform Material material;
+uniform vec3 fogColor;
+uniform float fogDensity;
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
@@ -87,7 +89,17 @@ void main()
     // Phase 3: Spot light (camera flashlight)
     result += CalcFlashlight(flashlight, norm, FragPos, viewDir);
 
-    FragColor = vec4(result, 1.0);
+    // distance from camera to fragment
+    float distance = length(viewPos - FragPos);
+
+    // exponential fog
+    float fogFactor = exp(-pow(distance * fogDensity, 2.0));
+    fogFactor = clamp(fogFactor, 0.0, 1.0);
+
+    // final color blended with fog
+    vec3 finalColor = mix(fogColor, result, fogFactor);
+    FragColor = vec4(finalColor, 1.0);
+
 }
 
 // ----- FUNCTIONS -----

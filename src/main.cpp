@@ -8,26 +8,24 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "Camera.h"
-
 
 #include "Model.h"
 #pragma message("Compiling with Model.h from: " __FILE__)
 #include "Shader.h"
 #include "Camera.h"
 #include "Flashlight.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "../include/stb_image.h"
 #include <vector>
 using std::vector;
-
 
 // Window settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // Camera
-Camera camera(glm::vec3(0.0f, 2.0f, 5.0f));
+Camera camera(glm::vec3(0.0f, 0.25f, 5.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -36,7 +34,11 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-// Input handling (basic escape key to close)
+// Flashlight
+Flashlight flashlight;
+static bool pressed = false;
+
+// Input handling
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -49,8 +51,18 @@ void processInput(GLFWwindow* window) {
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
-}
 
+    static bool pressed = false;
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+        if (!pressed) {
+            flashlight.toggle();
+            pressed = true;
+        }
+    }
+    else {
+        pressed = false;
+    }
+}
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     if (firstMouse) {
@@ -130,8 +142,6 @@ float skyboxVertices[] = {
      1.0f, -1.0f,  1.0f
 };
 
-
-
 unsigned int loadCubemap(const std::vector<std::string>& faces) {
     unsigned int textureID;
     glGenTextures(1, &textureID);
@@ -163,10 +173,6 @@ unsigned int loadCubemap(const std::vector<std::string>& faces) {
     return textureID;
 }
 
-
-
-
-
 int main() {
     // 1. Initialize GLFW
     if (!glfwInit()) {
@@ -186,12 +192,10 @@ int main() {
         return -1;
     }
 
-
     glfwMakeContextCurrent(window);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
-
 
     // 3. Initialize GLEW
     glewExperimental = GL_TRUE; // needed for core profile
@@ -204,7 +208,7 @@ int main() {
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
 	// Set callbacks
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
 
     // Capture mouse
@@ -214,6 +218,7 @@ int main() {
     glEnable(GL_DEPTH_TEST);
 
     // 4. Load shaders
+    Shader flashlightshader("shaders/basic.vs", "shaders/flashlight.fs");
     Shader shader("shaders/model_loading.vs", "shaders/model_loading.fs");
     shader.use();
 
@@ -274,8 +279,6 @@ int main() {
     unsigned int cubemapTexture = loadCubemap(faces);
     Shader skyboxShader("shaders/skybox.vs", "shaders/skybox.fs");
 
-
-
     unsigned int grassTexture;
     glGenTextures(1, &grassTexture);
     glBindTexture(GL_TEXTURE_2D, grassTexture);
@@ -299,17 +302,6 @@ int main() {
     }
     stbi_image_free(data);
 
-    /*
-    shader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-    shader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
-    shader.setFloat("spotLight.constant", 1.0f);
-    shader.setFloat("spotLight.linear", 0.09f);
-    shader.setFloat("spotLight.quadratic", 0.032f);
-    shader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
-    shader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
-    shader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);*/
-
-
     // 6. Main render loop
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
@@ -318,16 +310,11 @@ int main() {
 
         processInput(window);
 
-        float currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
-
         glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader.use();
         shader.setFloat("material.shininess", 32.0f);
-
 
         // --- Directional light ---
         shader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
@@ -353,10 +340,21 @@ int main() {
         shader.setFloat("pointLights[1].linear", 0.09f);
         shader.setFloat("pointLights[1].quadratic", 0.032f);
 
+		// Flashlight
+        flashlight.updateFromCamera(camera.Position, camera.Front);
 
-        /*// --- Spotlight follows camera ---
-        shader.setVec3("spotLight.position", camera.Position);
-        shader.setVec3("spotLight.direction", camera.Front); */
+        shader.use();
+        shader.setBool("flashlight.enabled", flashlight.enabled);
+        shader.setVec3("flashlight.position", flashlight.position);
+        shader.setVec3("flashlight.direction", flashlight.direction);
+        shader.setVec3("flashlight.ambient", flashlight.ambient);
+        shader.setVec3("flashlight.diffuse", flashlight.diffuse);
+        shader.setVec3("flashlight.specular", flashlight.specular);
+        shader.setFloat("flashlight.cutOff", flashlight.cutOff);
+        shader.setFloat("flashlight.outerCutOff", flashlight.outerCutOff);
+        shader.setFloat("flashlight.constant", flashlight.constant);
+        shader.setFloat("flashlight.linear", flashlight.linear);
+        shader.setFloat("flashlight.quadratic", flashlight.quadratic);
 
         // Camera matrices
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
@@ -408,7 +406,6 @@ int main() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
 
     // Cleanup
     glfwTerminate();

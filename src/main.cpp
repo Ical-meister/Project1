@@ -43,6 +43,12 @@ static bool pressed = false;
 // Day-Night Cycle
 DayNightCycle cycle(60.0f);
 
+//Terrain
+std::vector<float> terrainVertices;
+std::vector<unsigned int> terrainIndices;
+unsigned int terrainVAO, terrainVBO, terrainEBO;
+
+
 struct ObjectInstance {
     glm::vec3 position;
     glm::vec3 scale;
@@ -93,6 +99,9 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     camera.ProcessMouseScroll(yoffset);
 }
+
+
+
 
 // Ground vertices (X, Y, Z,  NormalX, NormalY, NormalZ,  U, V)
 float groundVertices[] = {
@@ -337,7 +346,29 @@ void renderScene(Shader& shader, Model& tree, Model& tree2, Model& rock,
 
     // forest wall
     for (const auto& inst : forestWallInstances) drawInstance(shader, Pine4, inst);
+
+    glBindVertexArray(terrainVAO);
+    glDrawElements(GL_TRIANGLES, terrainIndices.size(), GL_UNSIGNED_INT, 0);
+
 }
+
+glm::vec3 calculateNormal(int x, int z, int width, int height, unsigned char* heightData, float heightScale) {
+    // Clamp helper
+    auto h = [&](int ix, int iz) {
+        ix = std::max(0, std::min(ix, width - 1));
+        iz = std::max(0, std::min(iz, height - 1));
+        return heightData[iz * width + ix] / 255.0f * heightScale;
+        };
+
+    float hL = h(x - 1, z);
+    float hR = h(x + 1, z);
+    float hD = h(x, z - 1);
+    float hU = h(x, z + 1);
+
+    glm::vec3 normal = glm::vec3(hL - hR, 2.0f, hD - hU);
+    return glm::normalize(normal);
+}
+
 
 
 int main() {
@@ -417,6 +448,65 @@ int main() {
         glm::vec3(0.0f, 1.0f, 0.0f));  // up vector
     lightSpaceMatrix = lightProjection * lightView;
 
+    // Heightmap
+    int imgWidth, imgHeight, imgChannels;
+    unsigned char* heightData = stbi_load("assets/textures/heightmap.png", &imgWidth, &imgHeight, &imgChannels, 1); // grayscale
+    if (!heightData) {
+        std::cout << "Failed to load heightmap: " << stbi_failure_reason() << std::endl;
+        return -1;
+    }
+
+    // --- Generate terrain vertices and indices ---
+    float scaleXZ = 1.0f;
+    float heightScale = 500.0f;
+
+    for (int z = 0; z < imgHeight; z++) {
+        for (int x = 0; x < imgWidth; x++) {
+            int idx = z * imgWidth + x;
+            float h = heightData[idx] / 255.0f * heightScale;
+
+            float xPos = (x - imgWidth / 2.0f) * scaleXZ;
+            float zPos = (z - imgHeight / 2.0f) * scaleXZ;
+            float yPos = h - (heightScale * 0.5f);
+
+            // --- Position ---
+            terrainVertices.push_back(xPos);
+            terrainVertices.push_back(yPos);
+            terrainVertices.push_back(zPos);
+
+            // --- Normal (temporary up) ---
+            glm::vec3 n = calculateNormal(x, z, imgWidth, imgHeight, heightData, heightScale);
+            terrainVertices.push_back(n.x);
+            terrainVertices.push_back(n.y);
+            terrainVertices.push_back(n.z);
+
+
+            // --- Texture coordinates ---
+            terrainVertices.push_back((float)x / imgWidth);
+            terrainVertices.push_back((float)z / imgHeight);
+        }
+    }
+
+
+
+    for (int z = 0; z < imgHeight - 1; z++) {
+        for (int x = 0; x < imgWidth - 1; x++) {
+            int topLeft = z * imgWidth + x;
+            int topRight = topLeft + 1;
+            int bottomLeft = (z + 1) * imgWidth + x;
+            int bottomRight = bottomLeft + 1;
+
+            terrainIndices.push_back(topLeft);
+            terrainIndices.push_back(bottomLeft);
+            terrainIndices.push_back(topRight);
+
+            terrainIndices.push_back(topRight);
+            terrainIndices.push_back(bottomLeft);
+            terrainIndices.push_back(bottomRight);
+        }
+    }
+    stbi_image_free(heightData);
+
 
     // 4. Load shaders
     Shader flashlightshader("shaders/basic.vs", "shaders/flashlight.fs");
@@ -453,6 +543,33 @@ int main() {
     glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
+
+    //terrainVBO
+    glGenVertexArrays(1, &terrainVAO);
+    glGenBuffers(1, &terrainVBO);
+    glGenBuffers(1, &terrainEBO);
+
+    glBindVertexArray(terrainVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, terrainVBO);
+    glBufferData(GL_ARRAY_BUFFER, terrainVertices.size() * sizeof(float), terrainVertices.data(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, terrainEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, terrainIndices.size() * sizeof(unsigned int), terrainIndices.data(), GL_STATIC_DRAW);
+
+    // positions (x,y,z) + texcoords (u,v)
+    // positions
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // normals
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    // texcoords
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
 
     unsigned int skyboxVAO, skyboxVBO;
     glGenVertexArrays(1, &skyboxVAO);
@@ -518,6 +635,7 @@ int main() {
         stbi_image_free(data);
     }
 
+
     // 6. Main render loop
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
@@ -526,7 +644,7 @@ int main() {
 
         cycle.update();
 
-        // update sky background (if not using cubemap)
+        // update sky background (if not using cubemap)t
         glClearColor(cycle.backgroundColor.r,
             cycle.backgroundColor.g,
             cycle.backgroundColor.b,
